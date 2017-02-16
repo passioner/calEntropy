@@ -177,11 +177,10 @@ double entropy(Counters& ct)
 	//return ((double)Size) * ((double)mininal) / total;
 
 	// assume entropy is proportional to (1-max) probability.
-	return ((double)Size) * ((double)1 - (double)max / total);
+	return ((double)Size) * ((double)1 - ((double)max / total));
 }
 
-/* num: taken + notTaken  (?) */
-// cal total num of a Counters
+// cal total num of a Counters: sum of all directions
 unsigned total(Counters& ct)
 {
 	unsigned total = 0;
@@ -231,9 +230,10 @@ double calTournamentEntropy(map<unsigned, Counters>& gCache, map<unsigned, Count
 		tempB = entropy(it->second);
 		MinE = tempA < tempB ? tempA : tempB;
 
-		tempA = total(lCache[it->first]);
-		tempB = total(it->second);
-		MinT = tempA < tempB ? tempA : tempB;
+		if(MinE == tempA)
+			MinT = total(lCache[it->first]);
+		else
+			MinT = total(it->second);
 
 		temp += MinT;
 		sum += MinT * MinE;
