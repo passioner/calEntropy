@@ -256,6 +256,8 @@ int main()
 	string curPC,nextPC,state,ISAtype;
 
 	int total_count = 0;
+	string lTag = "local";
+	string gTag = "global";
 
 	unsigned instShiftAmt = 2;
 
@@ -346,8 +348,8 @@ int main()
 		adjustSet(globalCache,10);
 		adjustSet(localCache,10);
 	
-		print(globalCache,"global");
-		print(localCache,"local");
+		print(globalCache,gTag);
+		print(localCache,lTag);
 	
 //		cout << calEntropy(globalCache) << endl;
 //		cout << calEntropy(localCache) << endl;
