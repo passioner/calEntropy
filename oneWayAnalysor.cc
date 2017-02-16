@@ -339,6 +339,8 @@ int main()
 			adjustSet(localCache,10);
 			cout << calTournamentEntropy(globalCache, localCache) << endl;
 			total_count = 0;
+			globalCache.clear();
+			localCache.clear();
 		}
 	}
 	read.close();
@@ -354,7 +356,6 @@ int main()
 //		cout << calEntropy(globalCache) << endl;
 //		cout << calEntropy(localCache) << endl;
 		cout << calTournamentEntropy(globalCache, localCache) << endl;
-
 	}
 
 	return 0;
