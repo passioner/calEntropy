@@ -5,6 +5,8 @@
 #include <vector>
 #include <deque>
 
+#define HR_MAX 20
+
 using namespace std;
 
 struct Counters
@@ -56,19 +58,23 @@ unsigned Taken(unsigned curPC, unsigned nextPC, string ISAtype)
 	return taken;
 }
 
-/* print cache */
+/* print cache 
+ * flag: cache type*/
 /* n-way: n branches
  * sets: number of patterns
  * map<pc_index,map<hr,Counters>>
  */
-void print(map<unsigned,Counters>& cache)
+void print(map<unsigned,Counters>& cache,string flag)
 {
+	string recordFile = "Record.txt";
+	flag += recordFile;
+	
 	// clear record.txt
-	ofstream mClear("record.txt",ios::out);
+	ofstream mClear(flag,ios::out);
 	mClear.clear();
 	mClear.close();
 
-	ofstream write("record.txt",ios::app);
+	ofstream write(flag,ios::app);
 	map<unsigned, Counters>::iterator it;
 	map<unsigned, unsigned>::iterator iter;
 
@@ -117,13 +123,13 @@ map<unsigned, unsigned>& operator+=(map<unsigned, unsigned>& a, map<unsigned, un
 }
 
 /* merge PHTs.
- * n : count from MSB of PHT(20bits here)
+ * n : count from MSB of HR_MAX(20bits here)
  * aliasing is an accuracy problem.
  */
 void adjustSet(map<unsigned, Counters>&cache, int n)
 {
 	unsigned mask = 0;
-	for (int i = 0; i < (20 - n); i++)
+	for (int i = 0; i < (HR_MAX - n); i++)
 	{
 		mask |= (1 << i);
 	}
@@ -136,7 +142,7 @@ void adjustSet(map<unsigned, Counters>&cache, int n)
 		hr = it->first & mask;
 		newIT = newPHT.find(hr);
 		if (newIT != newPHT.end()) {
-			// merge Counters
+			// merge Counters: map<unsigned,unsigned>
 			newPHT[hr].directions += (it->second).directions;
 		}else
 		{
@@ -151,18 +157,27 @@ void adjustSet(map<unsigned, Counters>&cache, int n)
 double entropy(Counters& ct)
 {
 	unsigned mininal;
+	unsigned max;
 	double total = 0;
 	map<unsigned, unsigned>::iterator it;
 	it = ct.directions.begin();
 	mininal = it->second;
+	max = it->second;
 	for(it = ct.directions.begin(); it != ct.directions.end(); it++)
 	{
 		total += (double)it->second;
 		if ((it->second) < mininal)
 			mininal = it->second;
+		if ((it->second) > max)
+			max = it->second;
 	}
 	unsigned Size = ct.directions.size();
-	return ((double)Size) * ((double)mininal) / total;
+
+	// assume entropy is proportional to mininal probability.
+	//return ((double)Size) * ((double)mininal) / total;
+
+	// assume entropy is proportional to (1-max) probability.
+	return ((double)Size) * ((double)1 - (double)max / total);
 }
 
 /* num: taken + notTaken  (?) */
@@ -195,8 +210,8 @@ double calEntropy(map<unsigned, Counters>& cache)
 }
 
 /* calculate global and local entropy per branch, 
- * take the minimum of the two, 
- * and average that minimum over all branches
+ * take the minimum of the two(Action like Tournament BP), 
+ * and average these minimums over all branches
  */
 double calTournamentEntropy(map<unsigned, Counters>& gCache, map<unsigned, Counters>& lCache)
 {
@@ -229,6 +244,7 @@ double calTournamentEntropy(map<unsigned, Counters>& gCache, map<unsigned, Count
 
 int main()
 {
+	unsigned interval = 1000000;
 	ifstream read("branch_record.txt",ios::binary);
 	if (!read.is_open())
 	{
@@ -238,6 +254,8 @@ int main()
 	string line;
 	istringstream stream;
 	string curPC,nextPC,state,ISAtype;
+
+	int total_count = 0;
 
 	unsigned instShiftAmt = 2;
 
@@ -250,7 +268,7 @@ int main()
 	unsigned local_index_set = 0;
 	unsigned taken = 0;
 
-	unsigned length = 20;
+	unsigned length = HR_MAX;
 	unsigned mask = (1 << length) - 1;
 
 	// global registor
@@ -283,6 +301,8 @@ int main()
 		stream >> state;
 		stream >> ISAtype;
 
+		total_count++;
+
 		cur_pc = string_to_unsigned_int(curPC);
 		next_pc = string_to_unsigned_int(nextPC);
 
@@ -309,19 +329,31 @@ int main()
 			globalRegistor = globalRegistor << 1;
 			localRegistor[local_index_way] = localRegistor[local_index_way] << 1;
 		}
+		
+		// cal entropy of each interval length.
+		if(total_count == interval)
+		{
+			adjustSet(globalCache,10);
+			adjustSet(localCache,10);
+			cout << calTournamentEntropy(globalCache, localCache) << endl;
+			total_count = 0;
+		}
 	}
 	read.close();
 
-//	adjustSet(globalCache,10);
+	if(total_count != 0)
+	{
+		adjustSet(globalCache,10);
+		adjustSet(localCache,10);
 	
-	adjustSet(localCache,10);
+		print(globalCache,"global");
+		print(localCache,"local");
+	
+//		cout << calEntropy(globalCache) << endl;
+//		cout << calEntropy(localCache) << endl;
+		cout << calTournamentEntropy(globalCache, localCache) << endl;
 
-//	print(globalCache);
-	print(localCache);
-
-//	cout << calEntropy(globalCache) << endl;
-//	cout << calEntropy(localCache) << endl;
-	cout << calTournamentEntropy(globalCache, localCache);
+	}
 
 	return 0;
 }
