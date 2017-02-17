@@ -256,6 +256,7 @@ int main()
 	string curPC,nextPC,state,ISAtype;
 
 	int total_count = 0;
+	double interval_entropy = 0;
 	string lTag = "local";
 	string gTag = "global";
 
@@ -337,7 +338,11 @@ int main()
 		{
 			adjustSet(globalCache,10);
 			adjustSet(localCache,10);
-			cout << calTournamentEntropy(globalCache, localCache) << endl;
+			interval_entropy = calTournamentEntropy(globalCache, localCache);
+			cout << interval_entropy << endl;
+			ofstream write("entropy.txt",ios::app);
+			write << interval_entropy << endl;
+			write.close();
 			total_count = 0;
 			globalCache.clear();
 			localCache.clear();
@@ -355,7 +360,11 @@ int main()
 	
 //		cout << calEntropy(globalCache) << endl;
 //		cout << calEntropy(localCache) << endl;
-		cout << calTournamentEntropy(globalCache, localCache) << endl;
+		interval_entropy = calTournamentEntropy(globalCache, localCache);
+		cout << interval_entropy << endl;
+		ofstream write("entropy.txt",ios::app);
+		write << interval_entropy << endl;
+		write.close();
 	}
 
 	return 0;
