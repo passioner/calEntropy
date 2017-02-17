@@ -355,8 +355,8 @@ int main()
 		adjustSet(globalCache,10);
 		adjustSet(localCache,10);
 	
-		print(globalCache,gTag);
-		print(localCache,lTag);
+//		print(globalCache,gTag);
+//		print(localCache,lTag);
 	
 //		cout << calEntropy(globalCache) << endl;
 //		cout << calEntropy(localCache) << endl;
