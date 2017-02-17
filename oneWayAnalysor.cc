@@ -242,9 +242,10 @@ double calTournamentEntropy(map<unsigned, Counters>& gCache, map<unsigned, Count
 	return Entropy;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-	unsigned interval = 1000000;
+	//unsigned interval = 1000000;
+	unsigned interval = atoi(argv[1]) * 10000;
 	ifstream read("branch_record.txt",ios::binary);
 	if (!read.is_open())
 	{
